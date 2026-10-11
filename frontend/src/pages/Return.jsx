@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Return.css';
+import TransactionCard from '../components/TransactionCard';
 
 function Return() {
   const [transactionId, setTransactionId] = useState('');
@@ -58,15 +59,10 @@ function Return() {
         </div>
       )}
 
-      {returnedRecord && (
-        <div className="transaction-card">
-          <h3>Return Completed</h3>
-          <p><strong>Transaction ID:</strong> {returnedRecord._id}</p>
-          <p><strong>Book ID:</strong> {returnedRecord.book}</p>
-          <p><strong>Return Date:</strong> {new Date(returnedRecord.returndate).toLocaleString()}</p>
-          <p><strong>Status:</strong> {returnedRecord.status}</p>
-        </div>
-      )}
+      <TransactionCard
+        title="Return Completed"
+        transaction={returnedRecord}
+      />
 
       <form onSubmit={handleReturnBook} className="circulation-form">
         <label>Transaction ID</label>

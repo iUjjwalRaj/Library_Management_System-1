@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Borrow.css';
+import TransactionCard from '../components/TransactionCard';
 
 function Borrow() {
   const [bookId, setBookId] = useState('');
@@ -63,16 +64,10 @@ function Borrow() {
         </div>
       )}
 
-      {issuedTransaction && (
-        <div className="transaction-card">
-          <h3>Transaction Created</h3>
-          <p><strong>Transaction ID:</strong> {issuedTransaction._id}</p>
-          <p><strong>Book ID:</strong> {issuedTransaction.book}</p>
-          <p><strong>User ID:</strong> {issuedTransaction.user}</p>
-          <p><strong>Due Date:</strong> {new Date(issuedTransaction.dueDate).toLocaleDateString()}</p>
-          <p><strong>Status:</strong> {issuedTransaction.status}</p>
-        </div>
-      )}
+      <TransactionCard
+        title="Transaction Created"
+        transaction={issuedTransaction}
+      />
 
       <form onSubmit={handleIssueBook} className="circulation-form">
         <label>Book ID (MongoDB Object ID)</label>
