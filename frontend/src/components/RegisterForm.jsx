@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
 // Styles for this form are in pages/Login.css
+import React, { useState } from 'react';
+import './RegisterForm.css';
+
 function RegisterForm({ onRegister }) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState('other');
