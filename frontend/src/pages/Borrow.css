@@ -82,4 +82,17 @@
 
 .circulation-btn:hover {
   opacity: 0.9;
+.borrow-page {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.borrow-page h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.borrow-page p {
+  color: var(--muted);
+  font-size: 16px;
 }
