@@ -1,0 +1,23 @@
+.auth-sub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-sub-form label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #374151);
+}
+
+.auth-sub-form input {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px;
+  outline: none;
+}
+
+.auth-sub-form input:focus {
+  border-color: var(--accent, #6366f1);
+}
