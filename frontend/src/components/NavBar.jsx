@@ -1,18 +1,21 @@
-import React from "react";
-import './NavBar.css'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import './NavBar.css';
 
 function NavBar() {
-    return(
-        <nav className="navbar">
-            <img src="/lotus.svg" alt="Lotus logo" className="logo" />
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Books</a></li>
-                <li><a href="#">Borrow</a></li>
-                <li><a href="#">Return</a></li>
-            </ul>
-        </nav>
-    )
+  return (
+    <nav className="navbar">
+      <Link to="/">
+        <img src="/lotus.svg" alt="Lotus logo" className="logo" />
+      </Link>
+      <ul>
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/books">Books</Link></li>
+        <li><Link to="/borrow">Borrow</Link></li>
+        <li><Link to="/return">Return</Link></li>
+      </ul>
+    </nav>
+  );
 }
 
 export default NavBar;
