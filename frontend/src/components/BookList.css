@@ -1,0 +1,23 @@
+.book-list-container {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: #f9fafb;
+  font-weight: 600;
+  text-align: left;
+}
+
+.empty-books-text {
+  color: var(--muted, #6b7280);
+  font-style: italic;
+  padding: 12px 0;
+}

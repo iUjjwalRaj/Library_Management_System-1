@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './AdminBooks.css';
+import BookForm from '../components/BookForm';
+import BookList from '../components/BookList';
 
 function AdminBooks() {
   const [books, setBooks] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [isbn, setIsbn] = useState('');
-  const [category, setCategory] = useState('');
-  const [totalCopies, setTotalCopies] = useState('');
-  const [availableCopies, setAvailableCopies] = useState('');
+  const [editingBook, setEditingBook] = useState(null);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
@@ -26,7 +22,7 @@ function AdminBooks() {
           }
         }
       } catch (err) {
-        console.error('Error loading books:', err);
+        console.error('Error fetching books:', err);
       }
     }
 
@@ -49,88 +45,41 @@ function AdminBooks() {
     }
   }
 
-  function handleEditClick(book) {
-    setEditingId(book._id);
-    setTitle(book.title);
-    setAuthor(book.author);
-    setIsbn(book.isbn);
-    setCategory(book.category);
-    setTotalCopies(book.totalCopies);
-    setAvailableCopies(book.availableCopies);
-    setMessage('');
-    setIsError(false);
-  }
-
-  function handleCancelEdit() {
-    setEditingId(null);
-    setTitle('');
-    setAuthor('');
-    setIsbn('');
-    setCategory('');
-    setTotalCopies('');
-    setAvailableCopies('');
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSaveBook(bookData) {
     setMessage('');
     setIsError(false);
 
-    const total = parseInt(totalCopies, 10);
-    const available = parseInt(availableCopies, 10);
-
-    if (total < 0 || available < 0) {
+    if (bookData.totalCopies < 0 || bookData.availableCopies < 0) {
       setIsError(true);
       setMessage('Copy counts cannot be negative.');
       return;
     }
 
-    if (available > total) {
+    if (bookData.availableCopies > bookData.totalCopies) {
       setIsError(true);
       setMessage('Available copies cannot exceed total copies.');
       return;
     }
 
-    const payload = {
-      title,
-      author,
-      isbn,
-      category,
-      totalCopies: total,
-      availableCopies: available,
-    };
-
     try {
-      if (editingId) {
-        const response = await fetch(`http://localhost:5001/api/books/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+      const url = editingBook
+        ? `http://localhost:5001/api/books/${editingBook._id}`
+        : 'http://localhost:5001/api/books';
+      const method = editingBook ? 'PUT' : 'POST';
 
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to update book');
-        }
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookData),
+      });
 
-        setMessage('Book updated successfully!');
-        handleCancelEdit();
-      } else {
-        const response = await fetch('http://localhost:5001/api/books', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to create book');
-        }
-
-        setMessage('Book created successfully!');
-        handleCancelEdit();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Operation failed');
       }
 
+      setMessage(editingBook ? 'Book updated successfully!' : 'Book created successfully!');
+      setEditingBook(null);
       refreshBooks();
     } catch (err) {
       setIsError(true);
@@ -138,7 +87,7 @@ function AdminBooks() {
     }
   }
 
-  async function handleDelete(bookId) {
+  async function handleDeleteBook(bookId) {
     if (!window.confirm('Are you sure you want to delete this book?')) {
       return;
     }
@@ -173,118 +122,22 @@ function AdminBooks() {
         </div>
       )}
 
-      <div className="admin-form-card">
-        <h3>{editingId ? 'Edit Book Record' : 'Add New Book'}</h3>
-        <form onSubmit={handleSubmit} className="admin-form">
-          <label>Title</label>
-          <input
-            type="text"
-            placeholder="Book Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-
-          <label>Author</label>
-          <input
-            type="text"
-            placeholder="Author Name"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            required
-          />
-
-          <label>ISBN</label>
-          <input
-            type="text"
-            placeholder="Unique ISBN"
-            value={isbn}
-            onChange={(e) => setIsbn(e.target.value)}
-            required
-          />
-
-          <label>Category</label>
-          <input
-            type="text"
-            placeholder="e.g. Software Engineering"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          />
-
-          <div className="form-row">
-            <div>
-              <label>Total Copies</label>
-              <input
-                type="number"
-                min="0"
-                value={totalCopies}
-                onChange={(e) => setTotalCopies(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label>Available Copies</label>
-              <input
-                type="number"
-                min="0"
-                value={availableCopies}
-                onChange={(e) => setAvailableCopies(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="btn-group">
-            <button type="submit" className="admin-btn save-btn">
-              {editingId ? 'Update Book' : 'Add Book'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={handleCancelEdit} className="admin-btn cancel-btn">
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
+      <div className="admin-card">
+        <BookForm
+          key={editingBook ? editingBook._id : 'new-book'}
+          editingBook={editingBook}
+          onSave={handleSaveBook}
+          onCancel={() => setEditingBook(null)}
+        />
       </div>
 
-      <div className="admin-table-card">
+      <div className="admin-card">
         <h3>Existing Books ({books.length})</h3>
-        {books.length === 0 ? (
-          <p>No books currently in database.</p>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>ISBN</th>
-                <th>Category</th>
-                <th>Copies (Avail/Total)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {books.map((b) => (
-                <tr key={b._id}>
-                  <td>{b.title}</td>
-                  <td>{b.author}</td>
-                  <td>{b.isbn}</td>
-                  <td>{b.category}</td>
-                  <td>{b.availableCopies} / {b.totalCopies}</td>
-                  <td>
-                    <button onClick={() => handleEditClick(b)} className="action-btn edit-btn">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(b._id)} className="action-btn delete-btn">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <BookList
+          books={books}
+          onEdit={(book) => setEditingBook(book)}
+          onDelete={handleDeleteBook}
+        />
       </div>
     </div>
   );
