@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Sec1Catalouge.css';
 import Card from './Sec1a';
 import CatalogueFilter from './CatalogueFilter';
@@ -9,6 +10,11 @@ function Sec1Catalouge() {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [borrowMessage, setBorrowMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+  const [borrowingBookId, setBorrowingBookId] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -47,8 +53,7 @@ function Sec1Catalouge() {
     };
   }, [category, onlyAvailable]);
 
-  async function handleSearch(e) {
-    e.preventDefault();
+  async function refreshBooksList() {
     try {
       const queryParams = new URLSearchParams();
       if (searchTerm) {
@@ -72,8 +77,13 @@ function Sec1Catalouge() {
         setBooks(data);
       }
     } catch (error) {
-      console.error('Error searching books:', error);
+      console.error('Error refreshing books:', error);
     }
+  }
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    refreshBooksList();
   }
 
   function handleReset() {
@@ -82,11 +92,60 @@ function Sec1Catalouge() {
     setOnlyAvailable(false);
   }
 
+  async function handleBorrow(book) {
+    setBorrowMessage('');
+    setIsError(false);
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsError(true);
+      setBorrowMessage('You must be logged in to borrow books. Redirecting to login...');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1200);
+      return;
+    }
+
+    setBorrowingBookId(book._id);
+
+    try {
+      const response = await fetch('http://localhost:5001/api/circulation/borrow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookId: book._id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to borrow book');
+      }
+
+      setIsError(false);
+      setBorrowMessage(`"${book.title}" borrowed successfully! View your loan in the Return page.`);
+      refreshBooksList();
+    } catch (err) {
+      setIsError(true);
+      setBorrowMessage(err.message);
+    } finally {
+      setBorrowingBookId(null);
+    }
+  }
+
   return (
     <div className="catalogue">
       <div className="catalogue-header">
         <h3>Catalogue</h3>
       </div>
+
+      {borrowMessage && (
+        <div className={`catalogue-alert ${isError ? 'error' : 'success'}`}>
+          {borrowMessage}
+        </div>
+      )}
 
       <CatalogueFilter
         searchTerm={searchTerm}
@@ -99,7 +158,11 @@ function Sec1Catalouge() {
         onReset={handleReset}
       />
 
-      <Card books={books} />
+      <Card
+        books={books}
+        onBorrow={handleBorrow}
+        borrowingBookId={borrowingBookId}
+      />
     </div>
   );
 }

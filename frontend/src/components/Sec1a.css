@@ -41,6 +41,47 @@
   color: var(--text-h);
 }
 
+.copies-available {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.copies-zero {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.card-actions {
+  margin-top: 14px;
+}
+
+.borrow-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.borrow-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.borrow-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.borrow-btn.unavailable-btn {
+  background: #6b7280;
+  color: #ffffff;
+}
+
 .empty-message {
   color: var(--text);
   font-style: italic;
