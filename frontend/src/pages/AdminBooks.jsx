@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './AdminBooks.css';
 import BookForm from '../components/BookForm';
 import BookList from '../components/BookList';
+import { API_URL } from '../config';
 
 function AdminBooks() {
   const [books, setBooks] = useState([]);
@@ -14,7 +15,7 @@ function AdminBooks() {
 
     async function loadBooks() {
       try {
-        const response = await fetch('http://localhost:5001/api/books');
+        const response = await fetch(`${API_URL}/books`);
         if (response.ok) {
           const data = await response.json();
           if (isMounted) {
@@ -35,7 +36,7 @@ function AdminBooks() {
 
   async function refreshBooks() {
     try {
-      const response = await fetch('http://localhost:5001/api/books');
+      const response = await fetch(`${API_URL}/books`);
       if (response.ok) {
         const data = await response.json();
         setBooks(data);
@@ -63,8 +64,8 @@ function AdminBooks() {
 
     try {
       const url = editingBook
-        ? `http://localhost:5001/api/books/${editingBook._id}`
-        : 'http://localhost:5001/api/books';
+        ? `${API_URL}/books/${editingBook._id}`
+        : `${API_URL}/books`;
       const method = editingBook ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -93,7 +94,7 @@ function AdminBooks() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/books/${bookId}`, {
+      const response = await fetch(`${API_URL}/books/${bookId}`, {
         method: 'DELETE',
       });
 
