@@ -9,120 +9,91 @@ function AdminBooks() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadBooks() {
-      try {
-        const response = await fetch('http://localhost:5001/api/books');
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted) {
-            setBooks(data);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching books:', err);
-      }
-    }
-
-    loadBooks();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  async function refreshBooks() {
+  async function loadBooks() {
     try {
-      const response = await fetch('http://localhost:5001/api/books');
-      if (response.ok) {
-        const data = await response.json();
+      const res = await fetch('http://localhost:5001/api/books');
+      if (res.ok) {
+        const data = await res.json();
         setBooks(data);
       }
-    } catch (err) {
-      console.error('Error refreshing books:', err);
+    } catch {
+      setMessage('Failed to load books');
+      setIsError(true);
     }
   }
 
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetch('http://localhost:5001/api/books');
+        if (res.ok && active) {
+          const data = await res.json();
+          setBooks(data);
+        }
+      } catch {
+        if (active) {
+          setMessage('Failed to load books');
+          setIsError(true);
+        }
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   async function handleSaveBook(bookData) {
     setMessage('');
-    setIsError(false);
-
-    if (bookData.totalCopies < 0 || bookData.availableCopies < 0) {
-      setIsError(true);
-      setMessage('Copy counts cannot be negative.');
-      return;
-    }
-
-    if (bookData.availableCopies > bookData.totalCopies) {
-      setIsError(true);
-      setMessage('Available copies cannot exceed total copies.');
-      return;
-    }
-
     try {
       const url = editingBook
         ? `http://localhost:5001/api/books/${editingBook._id}`
         : 'http://localhost:5001/api/books';
       const method = editingBook ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method: method,
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookData),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Operation failed');
-      }
-
-      setMessage(editingBook ? 'Book updated successfully!' : 'Book created successfully!');
+      setMessage(editingBook ? 'Book updated successfully!' : 'Book added successfully!');
+      setIsError(false);
       setEditingBook(null);
-      refreshBooks();
+      loadBooks();
     } catch (err) {
+      setMessage(err.message || 'Operation failed');
       setIsError(true);
-      setMessage(err.message);
     }
   }
 
-  async function handleDeleteBook(bookId) {
-    if (!window.confirm('Are you sure you want to delete this book?')) {
-      return;
-    }
-
+  async function handleDeleteBook(id) {
+    if (!window.confirm('Are you sure you want to delete this book?')) return;
     try {
-      const response = await fetch(`http://localhost:5001/api/books/${bookId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete book');
-      }
-
-      setMessage('Book deleted successfully.');
+      const res = await fetch(`http://localhost:5001/api/books/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete book');
+      setMessage('Book deleted successfully');
       setIsError(false);
-      refreshBooks();
+      loadBooks();
     } catch (err) {
+      setMessage(err.message || 'Error deleting book');
       setIsError(true);
-      setMessage(err.message);
     }
   }
 
   return (
-    <div className="admin-container">
+    <div className="admin-page">
       <h2>Admin Book Management</h2>
-      <p className="admin-subtitle">Create, update, and remove catalogue book records.</p>
+      <p className="subtitle">Add, edit, or remove books from the library catalogue.</p>
 
       {message && (
-        <div className={`admin-alert ${isError ? 'error' : 'success'}`}>
-          {message}
-        </div>
+        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
       )}
 
-      <div className="admin-card">
+      <div className="admin-form-card">
         <BookForm
           key={editingBook ? editingBook._id : 'new-book'}
           editingBook={editingBook}
@@ -131,11 +102,11 @@ function AdminBooks() {
         />
       </div>
 
-      <div className="admin-card">
+      <div className="admin-table-card">
         <h3>Existing Books ({books.length})</h3>
         <BookList
           books={books}
-          onEdit={(book) => setEditingBook(book)}
+          onEdit={setEditingBook}
           onDelete={handleDeleteBook}
         />
       </div>

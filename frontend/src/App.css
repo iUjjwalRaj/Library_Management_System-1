@@ -1,11 +1,10 @@
 .app-container {
   width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-container > h1 {
-  font-size: 26px;
-  font-weight: 600;
-  margin: 20px 0 10px 0;
-  color: var(--text-h);
+  display: none; /* Accessible brand heading visually represented in polished navbar */
 }

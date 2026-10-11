@@ -1,25 +1,48 @@
 .auth-sub-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .auth-sub-form label {
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text, #374151);
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: -6px;
 }
 
 .auth-sub-form input,
 .auth-sub-form select {
-  padding: 10px 12px;
+  padding: 11px 14px;
   font-size: 14px;
-  border: 1px solid var(--border, #d1d5db);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-app);
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .auth-sub-form input:focus,
 .auth-sub-form select:focus {
-  border-color: var(--accent, #6366f1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+  background: #ffffff;
+}
+
+.auth-btn {
+  margin-top: 6px;
+  padding: 12px;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
 }

@@ -9,15 +9,20 @@
 }
 
 .admin-table th {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border, #e5e7eb);
-  background: #f9fafb;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-app);
+  color: var(--text-muted);
   font-weight: 600;
   text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .empty-books-text {
-  color: var(--muted, #6b7280);
+  color: var(--text-muted);
   font-style: italic;
-  padding: 12px 0;
+  padding: 24px 0;
+  text-align: center;
 }

@@ -10,80 +10,76 @@ function Sec1Catalouge() {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [borrowMessage, setBorrowMessage] = useState('');
+  const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [borrowingBookId, setBorrowingBookId] = useState(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadBooks() {
+    let active = true;
+    async function load() {
       try {
-        const queryParams = new URLSearchParams();
-        if (category) {
-          queryParams.append('category', category);
+        const query = new URLSearchParams();
+        if (category) query.append('category', category);
+        if (onlyAvailable) query.append('available', 'true');
+        const res = await fetch(`http://localhost:5001/api/books?${query}`);
+        if (res.ok && active) {
+          const data = await res.json();
+          setBooks(data);
         }
-        if (onlyAvailable) {
-          queryParams.append('available', 'true');
-        }
-
-        const queryString = queryParams.toString();
-        const url = queryString
-          ? `http://localhost:5001/api/books?${queryString}`
-          : 'http://localhost:5001/api/books';
-
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted) {
-            setBooks(data);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading books:', error);
+      } catch (err) {
+        console.error('Error fetching catalogue:', err);
       }
     }
-
-    loadBooks();
-
+    load();
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, [category, onlyAvailable]);
 
-  async function refreshBooksList() {
+  async function refreshBooks() {
     try {
-      const queryParams = new URLSearchParams();
-      if (searchTerm) {
-        queryParams.append('search', searchTerm);
-      }
-      if (category) {
-        queryParams.append('category', category);
-      }
-      if (onlyAvailable) {
-        queryParams.append('available', 'true');
-      }
-
-      const queryString = queryParams.toString();
-      const url = queryString
-        ? `http://localhost:5001/api/books?${queryString}`
-        : 'http://localhost:5001/api/books';
-
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
+      const query = new URLSearchParams();
+      if (searchTerm) query.append('search', searchTerm);
+      if (category) query.append('category', category);
+      if (onlyAvailable) query.append('available', 'true');
+      const res = await fetch(`http://localhost:5001/api/books?${query}`);
+      if (res.ok) {
+        const data = await res.json();
         setBooks(data);
       }
-    } catch (error) {
-      console.error('Error refreshing books:', error);
+    } catch (err) {
+      console.error('Error refreshing catalogue:', err);
     }
   }
 
-  async function handleSearch(e) {
-    e.preventDefault();
-    refreshBooksList();
+  async function handleBorrow(book) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMessage('Please log in to borrow books.');
+      setIsError(true);
+      setTimeout(() => navigate('/login'), 1200);
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5001/api/circulation/borrow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookId: book._id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setMessage(`"${book.title}" borrowed successfully! View it in My Loans.`);
+      setIsError(false);
+      refreshBooks();
+    } catch (err) {
+      setMessage(err.message || 'Failed to borrow book');
+      setIsError(true);
+    }
   }
 
   function handleReset() {
@@ -92,59 +88,14 @@ function Sec1Catalouge() {
     setOnlyAvailable(false);
   }
 
-  async function handleBorrow(book) {
-    setBorrowMessage('');
-    setIsError(false);
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsError(true);
-      setBorrowMessage('You must be logged in to borrow books. Redirecting to login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 1200);
-      return;
-    }
-
-    setBorrowingBookId(book._id);
-
-    try {
-      const response = await fetch('http://localhost:5001/api/circulation/borrow', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ bookId: book._id }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to borrow book');
-      }
-
-      setIsError(false);
-      setBorrowMessage(`"${book.title}" borrowed successfully! View your loan in the Return page.`);
-      refreshBooksList();
-    } catch (err) {
-      setIsError(true);
-      setBorrowMessage(err.message);
-    } finally {
-      setBorrowingBookId(null);
-    }
-  }
-
   return (
     <div className="catalogue">
       <div className="catalogue-header">
-        <h3>Catalogue</h3>
+        <h3>Book Catalogue</h3>
       </div>
 
-      {borrowMessage && (
-        <div className={`catalogue-alert ${isError ? 'error' : 'success'}`}>
-          {borrowMessage}
-        </div>
+      {message && (
+        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
       )}
 
       <CatalogueFilter
@@ -154,15 +105,14 @@ function Sec1Catalouge() {
         onCategoryChange={setCategory}
         onlyAvailable={onlyAvailable}
         onAvailableChange={setOnlyAvailable}
-        onSearch={handleSearch}
+        onSearch={(e) => {
+          e.preventDefault();
+          refreshBooks();
+        }}
         onReset={handleReset}
       />
 
-      <Card
-        books={books}
-        onBorrow={handleBorrow}
-        borrowingBookId={borrowingBookId}
-      />
+      <Card books={books} onBorrow={handleBorrow} />
     </div>
   );
 }

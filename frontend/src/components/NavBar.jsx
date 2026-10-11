@@ -5,16 +5,17 @@ import './NavBar.css';
 function NavBar() {
   return (
     <nav className="navbar">
-      <Link to="/">
-        <img src="/lotus.svg" alt="Lotus logo" className="logo" />
+      <Link to="/" className="brand-logo">
+        <img src="/lotus.svg" alt="Lotus logo" className="logo-img" />
+        <span className="brand-title">LibraryMS</span>
       </Link>
-      <ul>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/books">Books</Link></li>
-        <li><Link to="/borrow">Borrow</Link></li>
-        <li><Link to="/return">Return</Link></li>
-        <li><Link to="/login">Login</Link></li>
-        <li><Link to="/admin">Admin</Link></li>
+      <ul className="nav-menu">
+        <li><Link to="/" className="nav-link">Home</Link></li>
+        <li><Link to="/books" className="nav-link">Catalogue</Link></li>
+        <li><Link to="/borrow" className="nav-link">Borrow</Link></li>
+        <li><Link to="/return" className="nav-link">My Books</Link></li>
+        <li><Link to="/login" className="nav-link">Login</Link></li>
+        <li><Link to="/admin" className="nav-link admin-badge">Admin</Link></li>
       </ul>
     </nav>
   );
