@@ -1,18 +1,24 @@
-import React from "react";
-import './NavBar.css'
+import { Link, NavLink } from 'react-router-dom';
+import './NavBar.css';
 
+// NavLink works like Link, but adds the "active" class to the current page's link
 function NavBar() {
-    return(
-        <nav className="navbar">
-            <img src="/lotus.svg" alt="Lotus logo" className="logo" />
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Books</a></li>
-                <li><a href="#">Borrow</a></li>
-                <li><a href="#">Return</a></li>
-            </ul>
-        </nav>
-    )
+  return (
+    <nav className="navbar">
+      <Link to="/" className="brand-logo">
+        <img src="/lotus.svg" alt="Lotus logo" className="logo-img" />
+        <span className="brand-title">LibraryMS</span>
+      </Link>
+
+      <ul className="nav-menu">
+        <li><NavLink to="/" end className="nav-link">Home</NavLink></li>
+        <li><NavLink to="/books" className="nav-link">Catalogue</NavLink></li>
+        <li><NavLink to="/return" className="nav-link">My Books</NavLink></li>
+        <li><NavLink to="/login" className="nav-link">Login</NavLink></li>
+        <li><NavLink to="/admin" className="nav-link admin-badge">Admin</NavLink></li>
+      </ul>
+    </nav>
+  );
 }
 
 export default NavBar;
