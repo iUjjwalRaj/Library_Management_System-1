@@ -30,6 +30,30 @@
   border-color: var(--border-strong);
 }
 
+.book-cover-container {
+  width: 100%;
+  height: 240px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+
+.book-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition);
+}
+
+.book-card:hover .book-cover-img {
+  transform: scale(1.03);
+}
+
 .book-category {
   align-self: flex-start;
   margin-bottom: 14px;
