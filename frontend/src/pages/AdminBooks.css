@@ -1,0 +1,149 @@
+.admin-container {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 24px;
+  text-align: left;
+}
+
+.admin-container h2 {
+  margin-top: 0;
+  font-size: 26px;
+  color: var(--text-h, #111827);
+}
+
+.admin-subtitle {
+  color: var(--muted, #6b7280);
+  font-size: 14px;
+  margin-top: -6px;
+  margin-bottom: 24px;
+}
+
+.admin-alert {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.admin-alert.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.admin-alert.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.admin-form-card,
+.admin-table-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.admin-form-card h3,
+.admin-table-card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-form label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text, #374151);
+}
+
+.admin-form input {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px;
+  outline: none;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.admin-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: var(--accent, #6366f1);
+  color: white;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border, #ccc);
+  color: var(--text, #374151);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  text-align: left;
+}
+
+.admin-table th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.action-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.edit-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+}
