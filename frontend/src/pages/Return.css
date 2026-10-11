@@ -1,0 +1,14 @@
+.return-page {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.return-page h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.return-page p {
+  color: var(--muted);
+  font-size: 16px;
+}
