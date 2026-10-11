@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Sec1Catalouge from './components/Sec1Catalouge';
 import Borrow from './pages/Borrow';
 import Return from './pages/Return';
+import Login from './pages/Login';
+import AdminBooks from './pages/AdminBooks';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/books" element={<Sec1Catalouge />} />
           <Route path="/borrow" element={<Borrow />} />
           <Route path="/return" element={<Return />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminBooks />} />
         </Routes>
       </div>
     </BrowserRouter>
