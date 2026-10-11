@@ -3,6 +3,7 @@ import './Sec1Catalouge.css';
 import Card from './Sec1a';
 import CatalogueFilter from './CatalogueFilter';
 import sampleBooks from '../data/sampleBooks';
+import { API_URL } from '../config';
 
 function Sec1Catalouge() {
   const [books, setBooks] = useState(sampleBooks);
@@ -25,8 +26,8 @@ function Sec1Catalouge() {
 
         const queryString = queryParams.toString();
         const url = queryString
-          ? `http://localhost:5001/api/books?${queryString}`
-          : 'http://localhost:5001/api/books';
+          ? `${API_URL}/books?${queryString}`
+          : `${API_URL}/books`;
 
         const response = await fetch(url);
         if (response.ok) {
@@ -63,8 +64,8 @@ function Sec1Catalouge() {
 
       const queryString = queryParams.toString();
       const url = queryString
-        ? `http://localhost:5001/api/books?${queryString}`
-        : 'http://localhost:5001/api/books';
+        ? `${API_URL}/books?${queryString}`
+        : `${API_URL}/books`;
 
       const response = await fetch(url);
       if (response.ok) {

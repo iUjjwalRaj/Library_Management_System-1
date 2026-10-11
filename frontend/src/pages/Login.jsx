@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Login.css';
 import LoginForm from '../components/LoginForm';
 import RegisterForm from '../components/RegisterForm';
+import { API_URL } from '../config';
 
 function Login() {
   const [isRegister, setIsRegister] = useState(false);
@@ -17,7 +18,7 @@ function Login() {
 
     async function loadUser() {
       try {
-        const response = await fetch('http://localhost:5001/api/auth/', {
+        const response = await fetch(`${API_URL}/auth/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -42,7 +43,7 @@ function Login() {
     setIsError(false);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -56,7 +57,7 @@ function Login() {
       localStorage.setItem('token', data.token);
       setMessage('Login successful!');
 
-      const userRes = await fetch('http://localhost:5001/api/auth/', {
+      const userRes = await fetch(`${API_URL}/auth/`, {
         headers: { Authorization: `Bearer ${data.token}` },
       });
 
@@ -75,7 +76,7 @@ function Login() {
     setIsError(false);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
