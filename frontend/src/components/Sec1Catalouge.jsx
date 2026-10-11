@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Sec1Catalouge.css';
 import Card from './Sec1a';
+import CatalogueFilter from './CatalogueFilter';
 import sampleBooks from '../data/sampleBooks';
 
 function Sec1Catalouge() {
@@ -28,16 +29,14 @@ function Sec1Catalouge() {
           : 'http://localhost:5001/api/books';
 
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to fetch books');
-        }
-
-        const data = await response.json();
-        if (isMounted) {
-          setBooks(data);
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setBooks(data);
+          }
         }
       } catch (error) {
-        console.error('Error fetching books:', error);
+        console.error('Error loading books:', error);
       }
     }
 
@@ -68,14 +67,12 @@ function Sec1Catalouge() {
         : 'http://localhost:5001/api/books';
 
       const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch books');
+      if (response.ok) {
+        const data = await response.json();
+        setBooks(data);
       }
-
-      const data = await response.json();
-      setBooks(data);
     } catch (error) {
-      console.error('Error fetching books:', error);
+      console.error('Error searching books:', error);
     }
   }
 
@@ -91,40 +88,16 @@ function Sec1Catalouge() {
         <h3>Catalogue</h3>
       </div>
 
-      <form className="filter-form" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search by title, author, or ISBN..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="category-select"
-        >
-          <option value="">All Categories</option>
-          <option value="Software Engineering">Software Engineering</option>
-          <option value="Programming">Programming</option>
-          <option value="Science">Science</option>
-          <option value="Fiction">Fiction</option>
-          <option value="Technology">Technology</option>
-        </select>
-
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={onlyAvailable}
-            onChange={(e) => setOnlyAvailable(e.target.checked)}
-          />
-          Available only
-        </label>
-
-        <button type="submit" className="search-btn">Search</button>
-        <button type="button" onClick={handleReset} className="reset-btn">Reset</button>
-      </form>
+      <CatalogueFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        category={category}
+        onCategoryChange={setCategory}
+        onlyAvailable={onlyAvailable}
+        onAvailableChange={setOnlyAvailable}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      />
 
       <Card books={books} />
     </div>
