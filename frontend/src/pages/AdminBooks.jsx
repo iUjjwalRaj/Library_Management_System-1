@@ -8,41 +8,25 @@ function AdminBooks() {
   const [editingBook, setEditingBook] = useState(null);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-
-  async function loadBooks() {
-    try {
-      const res = await fetch('http://localhost:5001/api/books');
-      if (res.ok) {
-        const data = await res.json();
-        setBooks(data);
-      }
-    } catch {
-      setMessage('Failed to load books');
-      setIsError(true);
-    }
-  }
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    let active = true;
-    async function load() {
+    async function fetchBooks() {
       try {
         const res = await fetch('http://localhost:5001/api/books');
-        if (res.ok && active) {
+        if (res.ok) {
           const data = await res.json();
           setBooks(data);
         }
-      } catch {
-        if (active) {
-          setMessage('Failed to load books');
-          setIsError(true);
-        }
+      } catch (err) {
+        console.error('Error loading books:', err);
+        setMessage('Failed to load books');
+        setIsError(true);
       }
     }
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
+
+    fetchBooks();
+  }, [reload]);
 
   async function handleSaveBook(bookData) {
     setMessage('');
@@ -63,7 +47,7 @@ function AdminBooks() {
       setMessage(editingBook ? 'Book updated successfully!' : 'Book added successfully!');
       setIsError(false);
       setEditingBook(null);
-      loadBooks();
+      setReload((r) => r + 1);
     } catch (err) {
       setMessage(err.message || 'Operation failed');
       setIsError(true);
@@ -77,7 +61,7 @@ function AdminBooks() {
       if (!res.ok) throw new Error('Failed to delete book');
       setMessage('Book deleted successfully');
       setIsError(false);
-      loadBooks();
+      setReload((r) => r + 1);
     } catch (err) {
       setMessage(err.message || 'Error deleting book');
       setIsError(true);

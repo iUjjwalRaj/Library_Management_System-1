@@ -3,55 +3,43 @@ import { useNavigate } from 'react-router-dom';
 import './Sec1Catalouge.css';
 import Card from './Sec1a';
 import CatalogueFilter from './CatalogueFilter';
-import sampleBooks from '../data/sampleBooks';
 
 function Sec1Catalouge() {
-  const [books, setBooks] = useState(sampleBooks);
+  const [books, setBooks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [reload, setReload] = useState(0);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    let active = true;
-    async function load() {
+    async function loadBooks() {
       try {
         const query = new URLSearchParams();
+        if (searchTerm) query.append('search', searchTerm);
         if (category) query.append('category', category);
         if (onlyAvailable) query.append('available', 'true');
-        const res = await fetch(`http://localhost:5001/api/books?${query}`);
-        if (res.ok && active) {
+
+        const queryString = query.toString();
+        const url = queryString
+          ? `http://localhost:5001/api/books?${queryString}`
+          : 'http://localhost:5001/api/books';
+
+        const res = await fetch(url);
+        if (res.ok) {
           const data = await res.json();
           setBooks(data);
         }
       } catch (err) {
-        console.error('Error fetching catalogue:', err);
+        console.error('Error loading catalogue:', err);
       }
     }
-    load();
-    return () => {
-      active = false;
-    };
-  }, [category, onlyAvailable]);
 
-  async function refreshBooks() {
-    try {
-      const query = new URLSearchParams();
-      if (searchTerm) query.append('search', searchTerm);
-      if (category) query.append('category', category);
-      if (onlyAvailable) query.append('available', 'true');
-      const res = await fetch(`http://localhost:5001/api/books?${query}`);
-      if (res.ok) {
-        const data = await res.json();
-        setBooks(data);
-      }
-    } catch (err) {
-      console.error('Error refreshing catalogue:', err);
-    }
-  }
+    loadBooks();
+  }, [searchTerm, category, onlyAvailable, reload]);
 
   async function handleBorrow(book) {
     const token = localStorage.getItem('token');
@@ -73,9 +61,10 @@ function Sec1Catalouge() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setMessage(`"${book.title}" borrowed successfully! View it in My Loans.`);
+
+      setMessage(`"${book.title}" borrowed successfully! View it in My Books.`);
       setIsError(false);
-      refreshBooks();
+      setReload((r) => r + 1);
     } catch (err) {
       setMessage(err.message || 'Failed to borrow book');
       setIsError(true);
@@ -86,6 +75,7 @@ function Sec1Catalouge() {
     setSearchTerm('');
     setCategory('');
     setOnlyAvailable(false);
+    setReload((r) => r + 1);
   }
 
   return (
@@ -107,7 +97,7 @@ function Sec1Catalouge() {
         onAvailableChange={setOnlyAvailable}
         onSearch={(e) => {
           e.preventDefault();
-          refreshBooks();
+          setReload((r) => r + 1);
         }}
         onReset={handleReset}
       />

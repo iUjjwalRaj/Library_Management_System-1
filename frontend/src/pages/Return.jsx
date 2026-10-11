@@ -6,44 +6,34 @@ function Return() {
   const [loans, setLoans] = useState([]);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [reload, setReload] = useState(0);
+
   const token = localStorage.getItem('token');
 
-  async function loadLoans() {
-    if (!token) return;
-    try {
-      const res = await fetch('http://localhost:5001/api/circulation/my-loans', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setLoans(data.loans || []);
-    } catch {
-      setMessage('Failed to load borrowed books');
-      setIsError(true);
-    }
-  }
-
   useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!token) return;
+    if (!token) return;
+
+    async function fetchLoans() {
       try {
         const res = await fetch('http://localhost:5001/api/circulation/my-loans', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok && active) setLoans(data.loans || []);
-      } catch {
-        if (active) {
-          setMessage('Failed to load borrowed books');
+        if (res.ok) {
+          setLoans(data.loans || []);
+        } else {
+          setMessage(data.message || 'Failed to load loans');
           setIsError(true);
         }
+      } catch (err) {
+        console.error('Error loading loans:', err);
+        setMessage('Network error loading loans');
+        setIsError(true);
       }
     }
-    load();
-    return () => {
-      active = false;
-    };
-  }, [token]);
+
+    fetchLoans();
+  }, [token, reload]);
 
   async function handleReturn(loanId) {
     setMessage('');
@@ -54,9 +44,10 @@ function Return() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+
       setMessage('Book returned successfully!');
       setIsError(false);
-      loadLoans();
+      setReload((r) => r + 1);
     } catch (err) {
       setMessage(err.message || 'Failed to return book');
       setIsError(true);
@@ -67,7 +58,7 @@ function Return() {
     return (
       <div className="return-page auth-notice">
         <h2>My Borrowed Books</h2>
-        <p>Please log in to view your borrowed books and return loans.</p>
+        <p>Please log in to view your borrowed books and return active loans.</p>
         <Link to="/login" className="btn-primary">Log In</Link>
       </div>
     );
