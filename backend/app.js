@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bookRoutes = require("./routes/bookRoutes");
 const authRoutes = require("./routes/authRoutes");
+const circulationRoutes = require("./routes/circulationRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/books", bookRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/circulation", circulationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
