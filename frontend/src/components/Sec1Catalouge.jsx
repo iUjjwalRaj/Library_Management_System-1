@@ -1,109 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Sec1Catalouge.css';
-import Card from './Sec1a';
-import CatalogueFilter from './CatalogueFilter';
+import BookCard from './Sec1a';
 
 function Sec1Catalouge() {
   const [books, setBooks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('');
-  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [reload, setReload] = useState(0);
-
+  // Increasing this number makes useEffect load the books again (e.g. after borrowing)
+  const [refreshCount, setRefreshCount] = useState(0);
   const navigate = useNavigate();
 
+  // Runs when the page opens, when the search text changes, and after a borrow
   useEffect(() => {
     async function loadBooks() {
       try {
-        const query = new URLSearchParams();
-        if (searchTerm) query.append('search', searchTerm);
-        if (category) query.append('category', category);
-        if (onlyAvailable) query.append('available', 'true');
-
-        const queryString = query.toString();
-        const url = queryString
-          ? `http://localhost:5001/api/books?${queryString}`
-          : 'http://localhost:5001/api/books';
-
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          setBooks(data);
-        }
-      } catch (err) {
-        console.error('Error loading catalogue:', err);
+        const res = await fetch(`http://localhost:5001/api/books?search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        if (res.ok) setBooks(data);
+      } catch {
+        setMessage('Could not load books. Is the backend running?');
+        setIsError(true);
       }
+      setLoading(false);
     }
-
     loadBooks();
-  }, [searchTerm, category, onlyAvailable, reload]);
+  }, [search, refreshCount]);
 
   async function handleBorrow(book) {
     const token = localStorage.getItem('token');
     if (!token) {
-      setMessage('Please log in to borrow books.');
-      setIsError(true);
-      setTimeout(() => navigate('/login'), 1200);
+      navigate('/login');
       return;
     }
 
     try {
+      // The backend finds the student from the token, checks stock and creates the loan
       const res = await fetch('http://localhost:5001/api/circulation/borrow', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ bookId: book._id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setMessage(`"${book.title}" borrowed successfully! View it in My Books.`);
-      setIsError(false);
-      setReload((r) => r + 1);
-    } catch (err) {
-      setMessage(err.message || 'Failed to borrow book');
+      setMessage(res.ok ? `"${book.title}" borrowed! See it in My Books.` : data.message);
+      setIsError(!res.ok);
+      setRefreshCount(refreshCount + 1);
+    } catch {
+      setMessage('Could not reach the server.');
       setIsError(true);
     }
   }
 
-  function handleReset() {
-    setSearchTerm('');
-    setCategory('');
-    setOnlyAvailable(false);
-    setReload((r) => r + 1);
-  }
-
   return (
-    <div className="catalogue">
+    <section className="catalogue">
       <div className="catalogue-header">
-        <h3>Book Catalogue</h3>
+        <h2>Book Catalogue</h2>
+        <p>Search the collection and borrow any available book.</p>
       </div>
 
-      {message && (
-        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
-      )}
-
-      <CatalogueFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        category={category}
-        onCategoryChange={setCategory}
-        onlyAvailable={onlyAvailable}
-        onAvailableChange={setOnlyAvailable}
-        onSearch={(e) => {
-          e.preventDefault();
-          setReload((r) => r + 1);
-        }}
-        onReset={handleReset}
+      <input
+        type="search"
+        className="search-input"
+        aria-label="Search books"
+        placeholder="Search by title, author or ISBN..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
       />
 
-      <Card books={books} onBorrow={handleBorrow} />
-    </div>
+      {message && <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>}
+      {loading && <p className="status-message">Loading books...</p>}
+      {!loading && books.length === 0 && <p className="status-message">No books found.</p>}
+
+      <div className="book-grid">
+        {books.map((book) => (
+          <BookCard key={book._id} book={book} onBorrow={handleBorrow} />
+        ))}
+      </div>
+    </section>
   );
 }
 

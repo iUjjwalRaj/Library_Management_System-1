@@ -1,11 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const bookController = require("../controllers/bookController");
+const authentication = require("../Middleware/authentication");
+const authorizeRooles = require("../Middleware/authorisation");
 
-router.post("/", bookController.createBook);
+// Anyone can view books
 router.get("/", bookController.getAllBooks);
 router.get("/:id", bookController.getBookById);
-router.put("/:id", bookController.updateBook);
-router.delete("/:id", bookController.deleteBook);
+
+// Only logged-in admins can add, edit, or delete books
+router.post("/", authentication, authorizeRooles("admin"), bookController.createBook);
+router.put("/:id", authentication, authorizeRooles("admin"), bookController.updateBook);
+router.delete("/:id", authentication, authorizeRooles("admin"), bookController.deleteBook);
 
 module.exports = router;

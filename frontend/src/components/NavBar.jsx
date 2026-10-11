@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import './NavBar.css';
 
+// NavLink works like Link, but adds the "active" class to the current page's link
 function NavBar() {
   return (
     <nav className="navbar">
@@ -9,13 +9,13 @@ function NavBar() {
         <img src="/lotus.svg" alt="Lotus logo" className="logo-img" />
         <span className="brand-title">LibraryMS</span>
       </Link>
+
       <ul className="nav-menu">
-        <li><Link to="/" className="nav-link">Home</Link></li>
-        <li><Link to="/books" className="nav-link">Catalogue</Link></li>
-        <li><Link to="/borrow" className="nav-link">Borrow</Link></li>
-        <li><Link to="/return" className="nav-link">My Books</Link></li>
-        <li><Link to="/login" className="nav-link">Login</Link></li>
-        <li><Link to="/admin" className="nav-link admin-badge">Admin</Link></li>
+        <li><NavLink to="/" end className="nav-link">Home</NavLink></li>
+        <li><NavLink to="/books" className="nav-link">Catalogue</NavLink></li>
+        <li><NavLink to="/return" className="nav-link">My Books</NavLink></li>
+        <li><NavLink to="/login" className="nav-link">Login</NavLink></li>
+        <li><NavLink to="/admin" className="nav-link admin-badge">Admin</NavLink></li>
       </ul>
     </nav>
   );

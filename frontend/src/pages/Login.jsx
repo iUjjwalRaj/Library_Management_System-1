@@ -1,66 +1,55 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './Login.css';
 import LoginForm from '../components/LoginForm';
 import RegisterForm from '../components/RegisterForm';
 
 function Login() {
-  const [isRegister, setIsRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    try {
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
 
-  async function handleLogin({ email, password }) {
-    setMessage('');
+  async function handleLogin(details) {
     try {
       const res = await fetch('http://localhost:5001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(details),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
+      if (!res.ok) {
+        setMessage(data.message);
+        setIsError(true);
+        return;
+      }
       localStorage.setItem('token', data.token);
 
+      // Ask the backend whose token this is, so we can show the name and role
       const userRes = await fetch('http://localhost:5001/api/auth/', {
         headers: { Authorization: `Bearer ${data.token}` },
       });
-      if (userRes.ok) {
-        const uData = await userRes.json();
-        setCurrentUser(uData.user);
-        localStorage.setItem('user', JSON.stringify(uData.user));
-      }
-      setMessage('Login successful!');
-      setIsError(false);
-    } catch (err) {
-      setMessage(err.message || 'Login failed');
+      const userData = await userRes.json();
+      localStorage.setItem('user', JSON.stringify(userData.user));
+      setUser(userData.user);
+    } catch {
+      setMessage('Could not reach the server.');
       setIsError(true);
     }
   }
 
-  async function handleRegister(userData) {
-    setMessage('');
+  async function handleRegister(details) {
     try {
       const res = await fetch('http://localhost:5001/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(details),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setMessage('Registration successful! Please log in.');
-      setIsError(false);
-      setIsRegister(false);
-    } catch (err) {
-      setMessage(err.message || 'Registration failed');
+      setMessage(res.ok ? 'Registration successful! Please log in.' : data.message);
+      setIsError(!res.ok);
+      if (res.ok) setShowRegister(false);
+    } catch {
+      setMessage('Could not reach the server.');
       setIsError(true);
     }
   }
@@ -68,17 +57,17 @@ function Login() {
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setCurrentUser(null);
-    setMessage('Logged out successfully.');
-    setIsError(false);
+    setUser(null);
+    setMessage('');
   }
 
-  if (currentUser) {
+  if (user) {
     return (
       <div className="auth-card">
-        <h2>Welcome, {currentUser.name}!</h2>
-        <p><strong>Email:</strong> {currentUser.email}</p>
-        <p><strong>Role:</strong> {currentUser.role}</p>
+        <div className="auth-avatar">{user.name[0]}</div>
+        <h2>Welcome, {user.name}!</h2>
+        <p className="auth-detail">{user.email}</p>
+        <span className="role-pill">{user.role}</span>
         <button onClick={handleLogout} className="btn-logout">Log Out</button>
       </div>
     );
@@ -86,29 +75,15 @@ function Login() {
 
   return (
     <div className="auth-card">
-      <h2>{isRegister ? 'Register Account' : 'Student & Admin Login'}</h2>
+      <h2>{showRegister ? 'Create an Account' : 'Welcome Back'}</h2>
+      {message && <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>}
 
-      {message && (
-        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
-      )}
-
-      {isRegister ? (
-        <RegisterForm onRegister={handleRegister} />
-      ) : (
-        <LoginForm onLogin={handleLogin} />
-      )}
+      {showRegister ? <RegisterForm onRegister={handleRegister} /> : <LoginForm onLogin={handleLogin} />}
 
       <p className="auth-toggle">
-        {isRegister ? 'Already registered?' : "Don't have an account?"}{' '}
-        <button
-          type="button"
-          onClick={() => {
-            setIsRegister(!isRegister);
-            setMessage('');
-          }}
-          className="btn-toggle"
-        >
-          {isRegister ? 'Log In here' : 'Register here'}
+        {showRegister ? 'Already registered? ' : "Don't have an account? "}
+        <button type="button" className="btn-toggle" onClick={() => setShowRegister(!showRegister)}>
+          {showRegister ? 'Log in here' : 'Register here'}
         </button>
       </p>
     </div>

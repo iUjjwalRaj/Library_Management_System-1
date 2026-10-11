@@ -1,64 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Return.css';
 
 function Return() {
   const [loans, setLoans] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [reload, setReload] = useState(0);
-
+  // Increasing this number makes useEffect load the loans again (e.g. after a return)
+  const [refreshCount, setRefreshCount] = useState(0);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    if (!token) return;
-
-    async function fetchLoans() {
+    async function loadLoans() {
       try {
+        // The backend only sends back the loans that belong to this token's user
         const res = await fetch('http://localhost:5001/api/circulation/my-loans', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok) {
-          setLoans(data.loans || []);
-        } else {
-          setMessage(data.message || 'Failed to load loans');
+        if (res.ok) setLoans(data.loans);
+        else {
+          setMessage(data.message);
           setIsError(true);
         }
-      } catch (err) {
-        console.error('Error loading loans:', err);
-        setMessage('Network error loading loans');
+      } catch {
+        setMessage('Could not load your books.');
         setIsError(true);
       }
+      setLoading(false);
     }
-
-    fetchLoans();
-  }, [token, reload]);
+    if (token) loadLoans();
+  }, [token, refreshCount]);
 
   async function handleReturn(loanId) {
-    setMessage('');
     try {
       const res = await fetch(`http://localhost:5001/api/circulation/return/${loanId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setMessage('Book returned successfully!');
-      setIsError(false);
-      setReload((r) => r + 1);
-    } catch (err) {
-      setMessage(err.message || 'Failed to return book');
+      setMessage(data.message);
+      setIsError(!res.ok);
+      setRefreshCount(refreshCount + 1);
+    } catch {
+      setMessage('Could not reach the server.');
       setIsError(true);
     }
   }
 
   if (!token) {
     return (
-      <div className="return-page auth-notice">
-        <h2>My Borrowed Books</h2>
-        <p>Please log in to view your borrowed books and return active loans.</p>
+      <div className="return-page empty-box">
+        <h2>My Books</h2>
+        <p>Please log in to see the books you have borrowed.</p>
         <Link to="/login" className="btn-primary">Log In</Link>
       </div>
     );
@@ -66,39 +61,34 @@ function Return() {
 
   return (
     <div className="return-page">
-      <h2>My Borrowed Books</h2>
-      <p className="subtitle">View your loans and return books when you are finished.</p>
+      <h2>My Books</h2>
+      <p className="subtitle">Your borrowed books and their due dates.</p>
 
-      {message && (
-        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
-      )}
+      {message && <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>}
+      {loading && <p className="status-message">Loading your books...</p>}
 
-      {loans.length === 0 ? (
+      {!loading && loans.length === 0 && (
         <div className="empty-box">
-          <p>You have no borrowed books right now.</p>
+          <p>You have not borrowed any books yet.</p>
           <Link to="/books" className="btn-primary">Browse Catalogue</Link>
         </div>
-      ) : (
-        <div className="loans-grid">
-          {loans.map((loan) => (
-            <div key={loan._id} className="loan-card">
-              <h3>{loan.bookTitle}</h3>
-              <p><strong>Author:</strong> {loan.bookAuthor}</p>
-              <p><strong>Due Date:</strong> {new Date(loan.dueDate).toLocaleDateString()}</p>
-              <div className="loan-footer">
-                <span className={`status-badge ${loan.status.toLowerCase()}`}>
-                  {loan.status === 'Issued' ? 'Active Loan' : 'Returned'}
-                </span>
-                {loan.status === 'Issued' && (
-                  <button onClick={() => handleReturn(loan._id)} className="btn-return">
-                    Return Book
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       )}
+
+      <div className="loans-grid">
+        {loans.map((loan) => (
+          <div key={loan._id} className="loan-card">
+            <h3>{loan.bookTitle}</h3>
+            <p>by {loan.bookAuthor}</p>
+            <p>Due: <strong>{new Date(loan.dueDate).toLocaleDateString()}</strong></p>
+            <div className="loan-footer">
+              <span className={`status-badge ${loan.status.toLowerCase()}`}>{loan.status}</span>
+              {loan.status === 'Issued' && (
+                <button className="btn-return" onClick={() => handleReturn(loan._id)}>Return</button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

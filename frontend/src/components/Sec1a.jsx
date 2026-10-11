@@ -1,42 +1,27 @@
-import React from 'react';
 import './Sec1a.css';
 
-function Card({ books = [], onBorrow }) {
-  if (books.length === 0) {
-    return <p className="empty-message">No books match your search.</p>;
-  }
+// Shows one book and its Borrow button
+function BookCard({ book, onBorrow }) {
+  const isAvailable = book.availableCopies > 0;
 
   return (
-    <div className="book-grid">
-      {books.map((book) => {
-        const isAvailable = book.availableCopies > 0;
+    <div className="book-card">
+      <span className="book-category">{book.category}</span>
+      <h3 className="book-title">{book.title}</h3>
+      <p className="book-author">by {book.author}</p>
 
-        return (
-          <div key={book._id || book.isbn} className="book-card">
-            <span className="book-category">{book.category || 'General'}</span>
-            <h4 className="book-title">{book.title}</h4>
-            <p className="book-author">by {book.author}</p>
-            <div className="book-meta">
-              <span className="copies-label">Available:</span>
-              <span className={`copies-count ${isAvailable ? 'in-stock' : 'out-of-stock'}`}>
-                {book.availableCopies} of {book.totalCopies}
-              </span>
-            </div>
-            {onBorrow && (
-              <button
-                type="button"
-                onClick={() => onBorrow(book)}
-                disabled={!isAvailable}
-                className={`btn-borrow ${!isAvailable ? 'disabled' : ''}`}
-              >
-                {isAvailable ? 'Borrow' : 'Currently unavailable'}
-              </button>
-            )}
-          </div>
-        );
-      })}
+      <div className="book-meta">
+        <span className="copies-label">Available copies</span>
+        <span className={`copies-count ${isAvailable ? 'in-stock' : 'out-of-stock'}`}>
+          {book.availableCopies} / {book.totalCopies}
+        </span>
+      </div>
+
+      <button className="btn-borrow" onClick={() => onBorrow(book)} disabled={!isAvailable}>
+        {isAvailable ? 'Borrow' : 'Currently unavailable'}
+      </button>
     </div>
   );
 }
 
-export default Card;
+export default BookCard;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './AdminBooks.css';
 import BookForm from '../components/BookForm';
 import BookList from '../components/BookList';
@@ -8,91 +8,77 @@ function AdminBooks() {
   const [editingBook, setEditingBook] = useState(null);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
-  const [reload, setReload] = useState(0);
+  // Increasing this number makes useEffect load the books again (after add/edit/delete)
+  const [refreshCount, setRefreshCount] = useState(0);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    async function fetchBooks() {
+    async function loadBooks() {
       try {
         const res = await fetch('http://localhost:5001/api/books');
-        if (res.ok) {
-          const data = await res.json();
-          setBooks(data);
-        }
-      } catch (err) {
-        console.error('Error loading books:', err);
-        setMessage('Failed to load books');
+        const data = await res.json();
+        if (res.ok) setBooks(data);
+      } catch {
+        setMessage('Could not load books.');
         setIsError(true);
       }
     }
+    loadBooks();
+  }, [refreshCount]);
 
-    fetchBooks();
-  }, [reload]);
-
-  async function handleSaveBook(bookData) {
-    setMessage('');
+  // Sends the request and shows the backend's answer (the backend checks for admin)
+  async function sendRequest(url, method, bookData, successText) {
     try {
-      const url = editingBook
-        ? `http://localhost:5001/api/books/${editingBook._id}`
-        : 'http://localhost:5001/api/books';
-      const method = editingBook ? 'PUT' : 'POST';
-
       const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
+        method: method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(bookData),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setMessage(editingBook ? 'Book updated successfully!' : 'Book added successfully!');
-      setIsError(false);
-      setEditingBook(null);
-      setReload((r) => r + 1);
-    } catch (err) {
-      setMessage(err.message || 'Operation failed');
+      setMessage(res.ok ? successText : data.message);
+      setIsError(!res.ok);
+      if (res.ok) {
+        setEditingBook(null);
+        setRefreshCount(refreshCount + 1);
+      }
+    } catch {
+      setMessage('Could not reach the server.');
       setIsError(true);
     }
   }
 
-  async function handleDeleteBook(id) {
-    if (!window.confirm('Are you sure you want to delete this book?')) return;
-    try {
-      const res = await fetch(`http://localhost:5001/api/books/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete book');
-      setMessage('Book deleted successfully');
-      setIsError(false);
-      setReload((r) => r + 1);
-    } catch (err) {
-      setMessage(err.message || 'Error deleting book');
-      setIsError(true);
+  function handleSave(bookData) {
+    if (editingBook) {
+      sendRequest(`http://localhost:5001/api/books/${editingBook._id}`, 'PUT', bookData, 'Book updated!');
+    } else {
+      sendRequest('http://localhost:5001/api/books', 'POST', bookData, 'Book added!');
+    }
+  }
+
+  function handleDelete(id) {
+    if (window.confirm('Delete this book?')) {
+      sendRequest(`http://localhost:5001/api/books/${id}`, 'DELETE', null, 'Book deleted!');
     }
   }
 
   return (
     <div className="admin-page">
       <h2>Admin Book Management</h2>
-      <p className="subtitle">Add, edit, or remove books from the library catalogue.</p>
+      <p className="subtitle">Add, edit, or remove books. You must be logged in as an admin.</p>
+      {message && <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>}
 
-      {message && (
-        <div className={`alert-box ${isError ? 'error' : 'success'}`}>{message}</div>
-      )}
-
-      <div className="admin-form-card">
+      <div className="admin-card">
         <BookForm
-          key={editingBook ? editingBook._id : 'new-book'}
+          key={editingBook ? editingBook._id : 'new'}
           editingBook={editingBook}
-          onSave={handleSaveBook}
+          onSave={handleSave}
           onCancel={() => setEditingBook(null)}
         />
       </div>
 
-      <div className="admin-table-card">
-        <h3>Existing Books ({books.length})</h3>
-        <BookList
-          books={books}
-          onEdit={setEditingBook}
-          onDelete={handleDeleteBook}
-        />
+      <div className="admin-card">
+        <h3>All Books ({books.length})</h3>
+        <BookList books={books} onEdit={setEditingBook} onDelete={handleDelete} />
       </div>
     </div>
   );

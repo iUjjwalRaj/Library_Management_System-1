@@ -4,6 +4,11 @@ const Book = require("../models/bookModel");
 
 jest.mock("../models/bookModel");
 
+const jwt = require("jsonwebtoken");
+process.env.JWT_SECRET = "test_jwt_secret";
+const adminToken = jwt.sign({ userId: "admin1", role: "admin" }, process.env.JWT_SECRET);
+const studentToken = jwt.sign({ userId: "student1", role: "user" }, process.env.JWT_SECRET);
+
 describe("Book Management APIs", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,6 +30,7 @@ describe("Book Management APIs", () => {
 
     const res = await request(app)
       .post("/api/books")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Clean Code",
         author: "Robert C. Martin",
@@ -41,6 +47,7 @@ describe("Book Management APIs", () => {
   test("POST /api/books should fail if required fields are missing", async () => {
     const res = await request(app)
       .post("/api/books")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Incomplete Book"
       });
@@ -52,6 +59,7 @@ describe("Book Management APIs", () => {
   test("POST /api/books should fail if availableCopies exceeds totalCopies", async () => {
     const res = await request(app)
       .post("/api/books")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Invalid Book",
         author: "Author",
@@ -70,6 +78,7 @@ describe("Book Management APIs", () => {
 
     const res = await request(app)
       .post("/api/books")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
         title: "Duplicate Book",
         author: "Author",
@@ -131,6 +140,7 @@ describe("Book Management APIs", () => {
 
     const res = await request(app)
       .put("/api/books/64f1a2b3c4d5e6f7a8b9c0d1")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ availableCopies: 7 });
 
     expect(res.statusCode).toBe(200);
@@ -142,6 +152,7 @@ describe("Book Management APIs", () => {
 
     const res = await request(app)
       .put("/api/books/64f1a2b3c4d5e6f7a8b9c099")
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({ availableCopies: 5 });
 
     expect(res.statusCode).toBe(404);
@@ -151,7 +162,9 @@ describe("Book Management APIs", () => {
   test("DELETE /api/books/:id should delete a book", async () => {
     Book.findByIdAndDelete.mockResolvedValue(sampleBook);
 
-    const res = await request(app).delete("/api/books/64f1a2b3c4d5e6f7a8b9c0d1");
+    const res = await request(app)
+      .delete("/api/books/64f1a2b3c4d5e6f7a8b9c0d1")
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.message).toBe("Book deleted successfully");
@@ -160,9 +173,23 @@ describe("Book Management APIs", () => {
   test("DELETE /api/books/:id should return 404 if book to delete does not exist", async () => {
     Book.findByIdAndDelete.mockResolvedValue(null);
 
-    const res = await request(app).delete("/api/books/64f1a2b3c4d5e6f7a8b9c099");
+    const res = await request(app)
+      .delete("/api/books/64f1a2b3c4d5e6f7a8b9c099")
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe("Book not found");
+  });
+
+  test("POST /api/books without a token should return 401", async () => {
+    const res = await request(app).post("/api/books").send(sampleBook);
+    expect(res.statusCode).toBe(401);
+  });
+
+  test("DELETE /api/books/:id as a student should return 403", async () => {
+    const res = await request(app)
+      .delete("/api/books/64f1a2b3c4d5e6f7a8b9c0d1")
+      .set("Authorization", `Bearer ${studentToken}`);
+    expect(res.statusCode).toBe(403);
   });
 });
