@@ -42,7 +42,7 @@ function Return() {
       const data = await res.json();
       setMessage(data.message);
       setIsError(!res.ok);
-      setRefreshCount(refreshCount + 1);
+      if (res.ok) setRefreshCount(refreshCount + 1);
     } catch {
       setMessage('Could not reach the server.');
       setIsError(true);

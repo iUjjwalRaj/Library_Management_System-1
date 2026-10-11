@@ -46,7 +46,7 @@ function Sec1Catalouge() {
       const data = await res.json();
       setMessage(res.ok ? `"${book.title}" borrowed! See it in My Books.` : data.message);
       setIsError(!res.ok);
-      setRefreshCount(refreshCount + 1);
+      if (res.ok) setRefreshCount(refreshCount + 1);
     } catch {
       setMessage('Could not reach the server.');
       setIsError(true);
