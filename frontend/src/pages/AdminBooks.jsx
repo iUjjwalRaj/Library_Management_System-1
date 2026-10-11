@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './AdminBooks.css';
 import BookForm from '../components/BookForm';
 import BookList from '../components/BookList';
+import { API_URL } from '../config';
 
 function AdminBooks() {
   const [books, setBooks] = useState([]);
@@ -21,6 +22,15 @@ function AdminBooks() {
       } catch {
         setMessage('Could not load books.');
         setIsError(true);
+        const response = await fetch(`${API_URL}/books`);
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setBooks(data);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching books:', err);
       }
     }
     loadBooks();
@@ -30,6 +40,39 @@ function AdminBooks() {
   async function sendRequest(url, method, bookData, successText) {
     try {
       const res = await fetch(url, {
+      const response = await fetch(`${API_URL}/books`);
+      if (response.ok) {
+        const data = await response.json();
+        setBooks(data);
+      }
+    } catch (err) {
+      console.error('Error refreshing books:', err);
+    }
+  }
+
+  async function handleSaveBook(bookData) {
+    setMessage('');
+    setIsError(false);
+
+    if (bookData.totalCopies < 0 || bookData.availableCopies < 0) {
+      setIsError(true);
+      setMessage('Copy counts cannot be negative.');
+      return;
+    }
+
+    if (bookData.availableCopies > bookData.totalCopies) {
+      setIsError(true);
+      setMessage('Available copies cannot exceed total copies.');
+      return;
+    }
+
+    try {
+      const url = editingBook
+        ? `${API_URL}/books/${editingBook._id}`
+        : `${API_URL}/books`;
+      const method = editingBook ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(bookData),
@@ -58,6 +101,22 @@ function AdminBooks() {
   function handleDelete(id) {
     if (window.confirm('Delete this book?')) {
       sendRequest(`http://localhost:5001/api/books/${id}`, 'DELETE', null, 'Book deleted!');
+    try {
+      const response = await fetch(`${API_URL}/books/${bookId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete book');
+      }
+
+      setMessage('Book deleted successfully.');
+      setIsError(false);
+      refreshBooks();
+    } catch (err) {
+      setIsError(true);
+      setMessage(err.message);
     }
   }
 
