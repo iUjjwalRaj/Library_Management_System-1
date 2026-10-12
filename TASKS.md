@@ -1,4 +1,4 @@
-# Project Tasks & Member Responsibilities
+# members Tasks
 
 This document outlines the assigned tasks, pull requests, and scope of work for each team member in the Library Management System project.
 
